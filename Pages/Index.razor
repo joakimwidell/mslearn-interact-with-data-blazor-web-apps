@@ -1,4 +1,39 @@
 @page "/"
+@inject HttpClient HttpClient
+@inject NavigationManager NavigationManager
+@using BlazingPizza.Services
+@inject OrderState OrderState
 
-<h1>Blazing Pizzas</h1>
-		
+<div class="main">
+    <h1>Blazing Pizzas</h1>
+    <ul class="pizza-cards">
+        @if(pizzaSpecials != null){
+            @foreach(var pizza in pizzaSpecials){
+                <li @onclick="@(() => OrderState.ShowConfigurePizzaDialog(pizza))" style="background-image: url('@pizza.ImageUrl')">
+                    <div class="pizza-info">
+                        <span class="title">@pizza.Name</span>
+                        @pizza.Description
+                        <span class="price">@pizza.GetFormattedBasePrice()</span>
+                    </div>
+                </li>
+            }
+        }
+    </ul>
+</div>
+
+@if(OrderState.ShowingConfigureDialog)
+{
+    <ConfigurePizzaDialog Pizza="OrderState.ConfiguringPizza"
+    OnCancel ="OrderState.CancelConfigurePizzaDialog"
+    OnConfirm ="OrderState.ConfirmConfigurePizzaDialog"/>
+}		
+
+@code {
+
+    List<PizzaSpecial> pizzaSpecials = new();
+    protected override async Task OnInitializedAsync()
+    {
+        pizzaSpecials = await HttpClient.GetFromJsonAsync<List<PizzaSpecial>>(NavigationManager.BaseUri + "specials");
+    }
+
+}
